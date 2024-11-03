@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>00:00:00 - 사용 시간 측정기</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2>카테고리별 사용시간</h2>
+          <button id="clear-sessions" class="button button-danger">
+            기록 초기화
+          </button>
+        </div>
+        <div id="category-list"></div>
+        <h2>세션 기록</h2>
+        <div id="session-log"></div>
+      </div>
+      <div class="main">
+        <button id="help-button" class="button button-secondary">📓 설명서</button>
+        <button id="settings-toggle" class="button button-primary">⚙️ 설정</button>
+        <div class="settings" id="settings-panel">
+          <h3>단축키 설정</h3>
+          <form id="shortcut-form">
+            <input
+              type="text"
+              id="shortcut"
+              class="form-input"
+              placeholder="단축키"
+              maxlength="1"
+              required
+            />
+            <input
+              type="text"
+              id="category"
+              class="form-input"
+              placeholder="카테고리"
+              required
+            />
+            <input
+              type="number"
+              id="timer"
+              class="form-input"
+              placeholder="타이머(분) (선택사항)"
+              min="0"
+            />
+            <button type="submit" class="button button-primary">추가</button>
+          </form>
+          <div class="timer-settings">
+            <h3>타이머 설정</h3>
+            <div class="toggle-container">
+              <label class="toggle">
+                <input type="checkbox" id="show-milliseconds" />
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">밀리초 표시</span>
+            </div>
+          </div>
+          <div class="shortcut-list">
+            <h3>설정된 단축키</h3>
+            <div id="shortcuts-container"></div>
+          </div>
+          <div class="share-section">
+            <h3>설정 공유</h3>
+            <button id="share-button" class="button button-primary">
+              URL 복사
+            </button>
+          </div>
+        </div>
+        <div class="timer-display">
+          <h1 id="time">00:00:00</h1>
+          <p id="current-category">카테고리를 선택하세요</p>
+          <div class="timer-controls">
+            <button id="pause-button" class="button button-primary" disabled>
+              일시정지
+            </button>
+          </div>
+      </div>
+      <div class="welcome-modal" id="welcome-modal">
+        <div class="welcome-content">
+          <button class="close-button" id="welcome-close">×</button>
+          <h2>사용 시간 측정기 사용법 👋</h2>
+          <div class="welcome-body">
+            <h3>⚡️ 빠른 시작</h3>
+            <ol>
+              <li>우측 상단의 ⚙️ 설정 버튼을 클릭하세요.</li>
+              <li>단축키와 카테고리를 등록하세요. (예: 'w' → '업무')</li>
+              <li>필요한 경우 타이머 시간을 설정하세요. (미설정 시 스톱워치로 동작)</li>
+              <li>등록한 단축키를 눌러 시간 측정을 시작하세요.</li>
+            </ol>
+            
+            <h3>⌨️ 키보드 단축키</h3>
+            <ul>
+              <li><strong>스페이스바</strong>: 일시정지/재개</li>
+              <li><strong>사용자 정의 키</strong>: 해당 카테고리 시간 측정 시작</li>
+            </ul>
+
+            <h3>📊 기록 확인</h3>
+            <ul>
+              <li>좌측 사이드바에서 카테고리별 총 사용시간 확인</li>
+              <li>세션별 상세 기록 및 일시정지 시간 확인</li>
+            </ul>
+          </div>
+          <button class="button button-primary" id="welcome-confirm">확인했습니다</button>
+        </div>
+      </div>
+      <div class="modal-backdrop" id="modal-backdrop"></div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

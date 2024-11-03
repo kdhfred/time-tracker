@@ -1,0 +1,681 @@
+:root {
+    --primary-color: #0066ff;
+    --success-color: #00c853;
+    --danger-color: #ff3d00;
+    --warning-color: #ffd600;
+    --text-primary: #2c3e50;
+    --text-secondary: #546e7a;
+    --background-primary: #ffffff;
+    --background-secondary: #f8fafb;
+    --border-radius-lg: 24px;
+    --border-radius-md: 16px;
+    --border-radius-sm: 12px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --transition: all 0.2s ease-in-out;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background-secondary);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    gap: 40px;
+    padding: 40px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.sidebar {
+    width: 380px;
+    background-color: var(--background-primary);
+    padding: 32px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    height: calc(100vh - 80px);
+    position: sticky;
+    top: 40px;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    margin-bottom: 32px;
+}
+
+.sidebar-header h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding: 40px;
+    background-color: var(--background-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    min-height: calc(100vh - 80px);
+}
+
+.timer-display {
+    text-align: center;
+    padding: 60px;
+    width: 100%;
+    max-width: 800px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#time {
+    font-size: 8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 32px;
+    letter-spacing: -2px;
+    font-variant-numeric: tabular-nums;
+}
+
+#current-category {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+    font-weight: 500;
+}
+
+.button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.button-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.button-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.button-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.settings {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    background-color: var(--background-primary);
+    padding: 32px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    display: none;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.settings.show {
+    display: block;
+}
+
+.settings h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+#shortcut-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.form-input {
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.session {
+    background-color: var(--background-secondary);
+    padding: 20px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 16px;
+}
+
+.session h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.toggle {
+    width: 52px;
+    height: 28px;
+}
+
+.toggle-slider {
+    background-color: #e0e0e0;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 6px;
+    border: 3px solid var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.session-entry {
+    padding: 20px;
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 16px;
+    border: none;
+}
+
+.session-entry .time {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.session-entry .duration {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 8px;
+}
+
+.session-entry .paused-time {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-left: 8px;
+    display: block;
+    margin-top: 4px;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .sidebar {
+        width: 320px;
+    }
+
+    #time {
+        font-size: 6rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+    }
+
+    .settings {
+        width: 95%;
+        max-height: 90vh;
+        padding: 24px;
+    }
+}
+
+/* 단축키 설정 관련 스타일 추가 및 수정 */
+.shortcut-list {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--background-secondary);
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    margin-bottom: 12px;
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.shortcut-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.shortcut-info {
+    flex: 1;
+    font-size: 1rem;
+}
+
+.shortcut-info strong {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-sm);
+    margin-right: 8px;
+}
+
+.shortcut-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.shortcut-actions button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+/* 공유 섹션 스타일 */
+.share-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--background-secondary);
+}
+
+/* 토글 스위치 개선 */
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: var(--transition);
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: var(--transition);
+    border-radius: 50%;
+}
+
+.toggle input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+.toggle input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+/* 설정 패널 내 입 개선 */
+#shortcut-form {
+    background-color: var(--background-secondary);
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+}
+
+.form-input {
+    padding: 12px 16px;
+    border: 2px solid transparent;
+    background-color: white;
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* 설정 토글 버튼 위치 조정 */
+#settings-toggle {
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    z-index: 1001;
+    margin: 20px;
+}
+
+/* 모달 스타일 수정 */
+.settings {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    background-color: var(--background-primary);
+    padding: 32px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    display: none;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+/* 모달 배경 추가 */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.modal-backdrop.show {
+    display: block;
+}
+
+/* 모달 내부 스크롤바 스타일링 */
+.settings::-webkit-scrollbar {
+    width: 8px;
+}
+
+.settings::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.settings::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    border: 2px solid var(--background-secondary);
+}
+
+.settings::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+@media (max-width: 768px) {
+    #settings-toggle {
+        top: 20px;
+        right: 20px;
+        margin: 10px;
+    }
+
+    .settings {
+        width: 95%;
+        max-height: 90vh;
+        padding: 24px;
+    }
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.session-entry .delete-session {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    min-width: 48px;
+}
+
+.session-entry:hover .delete-session {
+    opacity: 1;
+}
+
+.session-entry .delete-session {
+    opacity: 0.6;
+    transition: var(--transition);
+}
+
+.session-entry .delete-session:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+/* 모달 관련 스타일 추가 */
+.welcome-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1002;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.welcome-modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+}
+
+.welcome-content {
+    position: relative;
+    background-color: var(--background-primary);
+    padding: 32px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.welcome-content h2 {
+    margin-bottom: 24px;
+    color: var(--text-primary);
+    font-size: 1.8rem;
+}
+
+.welcome-body {
+    margin-bottom: 24px;
+}
+
+.welcome-body h3 {
+    margin: 20px 0 12px;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.welcome-body ul, .welcome-body ol {
+    padding-left: 24px;
+    margin-bottom: 16px;
+}
+
+.welcome-body li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.welcome-body strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.close-button:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+#welcome-confirm {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+    background-color: var(--success-color);
+    color: white;
+}
+
+#welcome-confirm:hover {
+    background-color: #00a548;
+}
+
+/* 버튼 스타일 추가 */
+.button-secondary {
+    background-color: #6B7280;
+    color: white;
+}
+
+.button-secondary:hover {
+    background-color: #4B5563;
+}
+
+/* 상단 버튼들 위치 조정 */
+#help-button, #settings-toggle {
+    position: fixed;
+    top: 40px;
+    z-index: 1001;
+    margin: 20px;
+}
+
+#help-button {
+    right: 140px;  /* settings-toggle 버튼 왼쪽에 위치 */
+}
+
+#settings-toggle {
+    right: 40px;
+}
+
+@media (max-width: 768px) {
+    #help-button, #settings-toggle {
+        top: 20px;
+        margin: 10px;
+    }
+    
+    #help-button {
+        right: 120px;
+    }
+    
+    #settings-toggle {
+        right: 20px;
+    }
+}
