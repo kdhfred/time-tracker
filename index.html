@@ -16,7 +16,13 @@
           </button>
         </div>
         <div id="category-list"></div>
-        <h2>세션 기록</h2>
+        
+        <div class="session-log-header">
+          <h2>세션 기록 (0)</h2>
+          <button id="toggle-sessions" class="button button-secondary">
+            <span class="toggle-icon">▼</span>
+          </button>
+        </div>
         <div id="session-log"></div>
       </div>
       <div class="main">
@@ -57,6 +63,18 @@
                 <span class="toggle-slider"></span>
               </label>
               <span class="toggle-label">밀리초 표시</span>
+            </div>
+            <div class="sound-settings">
+              <div class="toggle-container">
+                <label class="toggle">
+                  <input type="checkbox" id="play-sound" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">타이머 종료음</span>
+              </div>
+              <button id="test-sound" class="button button-secondary">
+                🔊 소리 테스트
+              </button>
             </div>
           </div>
           <div class="shortcut-list">

@@ -679,3 +679,264 @@ body {
         right: 20px;
     }
 }
+
+/* 모바일 대응을 위한 미디어 쿼리 수정 및 추가 */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 20px;
+    }
+
+    .main {
+        padding: 20px;
+        min-height: auto;
+    }
+
+    #time {
+        font-size: 4rem; /* 타이머 크기 축소 */
+        margin-bottom: 20px;
+    }
+
+    #current-category {
+        font-size: 1.5rem; /* 카테고리명 크기 축소 */
+        margin-bottom: 20px;
+    }
+
+    .timer-display {
+        padding: 20px;
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+    }
+
+    .settings {
+        width: 95%;
+        padding: 20px;
+    }
+
+    /* 상단 버튼 크기 및 위치 조정 */
+    #help-button, #settings-toggle {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        top: 10px;
+    }
+
+    #help-button {
+        right: 100px;
+    }
+
+    #settings-toggle {
+        right: 10px;
+    }
+
+    /* 세션 엔트리 조정 */
+    .session-entry {
+        padding: 15px;
+    }
+
+    .session-entry .time {
+        font-size: 0.85rem;
+    }
+
+    .session-entry .duration {
+        font-size: 1rem;
+    }
+
+    /* 단축키 아이템 조정 */
+    .shortcut-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .shortcut-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    /* 웰컴 모달 조정 */
+    .welcome-content {
+        padding: 20px;
+        max-height: 80vh;
+    }
+
+    .welcome-content h2 {
+        font-size: 1.5rem;
+        padding-right: 30px;
+    }
+
+    .welcome-body h3 {
+        font-size: 1.1rem;
+    }
+
+    .welcome-body {
+        font-size: 0.9rem;
+    }
+}
+
+/* 더 작은 모바일 화면을 위한 추가 대응 */
+@media (max-width: 480px) {
+    #time {
+        font-size: 3rem;
+    }
+
+    #current-category {
+        font-size: 1.2rem;
+    }
+
+    .button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .sidebar-header h2 {
+        font-size: 1.4rem;
+    }
+
+    /* 폼 입력 필드 조정 */
+    .form-input {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    /* 설정 패널 내부 여백 조정 */
+    #shortcut-form {
+        padding: 15px;
+    }
+
+    /* 토글 스위치 크기 조정 */
+    .toggle {
+        width: 44px;
+        height: 24px;
+    }
+
+    .toggle-slider:before {
+        height: 16px;
+        width: 16px;
+    }
+
+    .toggle input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+    }
+}
+
+/* 가로 모드 대응 */
+@media (max-height: 600px) and (orientation: landscape) {
+    .timer-display {
+        padding: 10px;
+    }
+
+    #time {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
+
+    #current-category {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .welcome-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* 카테고리 항목 스타일 */
+.category-item {
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.category-item:hover {
+    transform: translateX(5px);
+}
+
+.category-item .shortcut-badge {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* 세션 로그 헤더 스타일 */
+.session-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 32px 0 16px;
+}
+
+.session-log-header h2 {
+    margin: 0;
+}
+
+#toggle-sessions {
+    padding: 4px 8px;
+    min-width: 32px;
+}
+
+.toggle-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+/* 세션 로그 접힘/펼침 애니메이션 */
+#session-log {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+#session-log.expanded {
+    max-height: 2000px; /* 충분히 큰 값 */
+    transition: max-height 0.3s ease-in;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .category-item .shortcut-badge {
+        padding: 1px 6px;
+        font-size: 0.75rem;
+    }
+}
+
+/* 사운드 설정 스타일 추가 */
+.sound-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+#test-sound {
+  align-self: flex-start;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .sound-settings {
+    gap: 8px;
+  }
+  
+  #test-sound {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
