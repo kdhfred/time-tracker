@@ -22,6 +22,44 @@ class TimeTracker {
     this.loadSettings();
     this.updateShortcutsList();
     this.checkFirstVisit();
+
+    // 다크모드 관련 코드
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    // 저장된 테마 설정 불러오기
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      darkModeToggle.checked = savedTheme === "dark";
+    } else {
+      // 시스템 설정에 따라 초기 테마 설정
+      if (prefersDarkScheme.matches) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        darkModeToggle.checked = true;
+      }
+    }
+
+    // 다크모드 토글 이벤트 리스너
+    darkModeToggle.addEventListener("change", function () {
+      const theme = this.checked ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+
+      // 타이틀 업데이트 (타이머가 실행 중인 경우)
+      if (currentTime) {
+        updateTitle(formatTime(currentTime));
+      }
+    });
+
+    // 시스템 테마 변경 감지
+    prefersDarkScheme.addEventListener("change", (e) => {
+      if (!localStorage.getItem("theme")) {
+        const theme = e.matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+        darkModeToggle.checked = e.matches;
+      }
+    });
   }
 
   loadShortcuts() {
@@ -116,18 +154,18 @@ class TimeTracker {
       }
     });
 
-    document.getElementById('help-button').addEventListener('click', () => {
-        this.showWelcomeModal();
+    document.getElementById("help-button").addEventListener("click", () => {
+      this.showWelcomeModal();
     });
 
-    document.getElementById('toggle-sessions').addEventListener('click', () => {
-        this.toggleSessionLog();
+    document.getElementById("toggle-sessions").addEventListener("click", () => {
+      this.toggleSessionLog();
     });
 
     document.getElementById("play-sound").addEventListener("change", (e) => {
       this.playSound = e.target.checked;
       localStorage.setItem("playSound", this.playSound);
-      
+
       if (this.playSound) {
         this.createBeep();
       }
@@ -316,15 +354,15 @@ class TimeTracker {
     const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
     const reversedSessions = [...sessions].reverse();
 
-    const sessionLogHeader = document.querySelector('.session-log-header h2');
+    const sessionLogHeader = document.querySelector(".session-log-header h2");
     sessionLogHeader.textContent = `세션 기록 (${sessions.length})`;
 
     const sessionLog = document.getElementById("session-log");
     sessionLog.innerHTML = "";
-    
+
     if (!this.isSessionLogExpanded) {
-      sessionLog.classList.remove('expanded');
-      document.querySelector('.toggle-icon').style.transform = 'rotate(-90deg)';
+      sessionLog.classList.remove("expanded");
+      document.querySelector(".toggle-icon").style.transform = "rotate(-90deg)";
     }
 
     const categoryList = document.getElementById("category-list");
@@ -336,7 +374,7 @@ class TimeTracker {
     });
 
     const allCategories = new Map();
-    this.shortcuts.forEach(({category}) => {
+    this.shortcuts.forEach(({ category }) => {
       allCategories.set(category, 0);
     });
 
@@ -348,10 +386,11 @@ class TimeTracker {
     allCategories.forEach((totalSeconds, category) => {
       const div = document.createElement("div");
       div.className = "session category-item";
-      
+
       const shortcutKey = categoryShortcuts.get(category);
-      const shortcutBadge = shortcutKey ? 
-        `<span class="shortcut-badge">${shortcutKey}</span>` : '';
+      const shortcutBadge = shortcutKey
+        ? `<span class="shortcut-badge">${shortcutKey}</span>`
+        : "";
 
       div.innerHTML = `
         <h3>${category}</h3>
@@ -360,7 +399,7 @@ class TimeTracker {
       `;
 
       if (shortcutKey) {
-        div.addEventListener('click', () => {
+        div.addEventListener("click", () => {
           this.startSession(shortcutKey);
         });
       }
@@ -554,7 +593,7 @@ class TimeTracker {
 
   deleteSession(index) {
     let sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-    if (confirm("이 세션�� 삭제하시겠습니까?")) {
+    if (confirm("이 세션 삭제하시겠습니까?")) {
       sessions.splice(index, 1);
       localStorage.setItem("sessions", JSON.stringify(sessions));
       this.updateDisplay();
@@ -562,94 +601,114 @@ class TimeTracker {
   }
 
   checkFirstVisit() {
-    if (!localStorage.getItem('hasVisited')) {
-        this.showWelcomeModal();
+    if (!localStorage.getItem("hasVisited")) {
+      this.showWelcomeModal();
     }
   }
 
   showWelcomeModal() {
-    const modal = document.getElementById('welcome-modal');
-    modal.classList.add('show');
+    const modal = document.getElementById("welcome-modal");
+    modal.classList.add("show");
 
-    const closeButton = document.getElementById('welcome-close');
-    const confirmButton = document.getElementById('welcome-confirm');
+    const closeButton = document.getElementById("welcome-close");
+    const confirmButton = document.getElementById("welcome-confirm");
 
     const closeModal = () => {
-        modal.classList.remove('show');
-        if (!localStorage.getItem('hasVisited')) {
-            localStorage.setItem('hasVisited', 'true');
-        }
+      modal.classList.remove("show");
+      if (!localStorage.getItem("hasVisited")) {
+        localStorage.setItem("hasVisited", "true");
+      }
     };
 
-    closeButton.removeEventListener('click', closeModal);
-    confirmButton.removeEventListener('click', closeModal);
-    
-    closeButton.addEventListener('click', closeModal);
-    confirmButton.addEventListener('click', closeModal);
+    closeButton.removeEventListener("click", closeModal);
+    confirmButton.removeEventListener("click", closeModal);
+
+    closeButton.addEventListener("click", closeModal);
+    confirmButton.addEventListener("click", closeModal);
 
     const modalClickHandler = (e) => {
-        if (e.target === modal) {
-            alert('설명서를 끝까지 읽어주세요! 우측 상단의 X 버튼이나 하단의 확인 버튼을 눌러주세요.');
-        }
+      if (e.target === modal) {
+        alert(
+          "설명서를 끝까지 읽어주세요! 우측 상단의 X 버튼이나 하단의 확인 버튼을 눌러주세요."
+        );
+      }
     };
 
-    modal.removeEventListener('click', modalClickHandler);
-    modal.addEventListener('click', modalClickHandler);
+    modal.removeEventListener("click", modalClickHandler);
+    modal.addEventListener("click", modalClickHandler);
 
     const contentClickHandler = (e) => {
-        e.stopPropagation();
+      e.stopPropagation();
     };
 
-    const welcomeContent = modal.querySelector('.welcome-content');
-    welcomeContent.removeEventListener('click', contentClickHandler);
-    welcomeContent.addEventListener('click', contentClickHandler);
+    const welcomeContent = modal.querySelector(".welcome-content");
+    welcomeContent.removeEventListener("click", contentClickHandler);
+    welcomeContent.addEventListener("click", contentClickHandler);
   }
 
   toggleSessionLog() {
-    const sessionLog = document.getElementById('session-log');
-    const toggleIcon = document.querySelector('.toggle-icon');
+    const sessionLog = document.getElementById("session-log");
+    const toggleIcon = document.querySelector(".toggle-icon");
     this.isSessionLogExpanded = !this.isSessionLogExpanded;
-    
+
     if (this.isSessionLogExpanded) {
-      sessionLog.classList.add('expanded');
-      toggleIcon.style.transform = 'rotate(0deg)';
+      sessionLog.classList.add("expanded");
+      toggleIcon.style.transform = "rotate(0deg)";
     } else {
-      sessionLog.classList.remove('expanded');
-      toggleIcon.style.transform = 'rotate(-90deg)';
+      sessionLog.classList.remove("expanded");
+      toggleIcon.style.transform = "rotate(-90deg)";
     }
   }
 
   createBeep() {
     try {
       if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
       }
-      
+
       const beepDuration = 0.2; // 각 비프음의 길이
       const beepInterval = 0.3; // 비프음 사이의 간격
       const beepCount = 3; // 비프음 횟수
-      
+
       for (let i = 0; i < beepCount; i++) {
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
-        
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime + (i * beepInterval));
-        
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(
+          880,
+          this.audioContext.currentTime + i * beepInterval
+        );
+
         // 각 비프음의 볼륨 제어
-        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime + (i * beepInterval));
-        gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + (i * beepInterval) + 0.02);
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime + (i * beepInterval) + beepDuration - 0.02);
-        gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + (i * beepInterval) + beepDuration);
-        
-        oscillator.start(this.audioContext.currentTime + (i * beepInterval));
-        oscillator.stop(this.audioContext.currentTime + (i * beepInterval) + beepDuration);
+        gainNode.gain.setValueAtTime(
+          0,
+          this.audioContext.currentTime + i * beepInterval
+        );
+        gainNode.gain.linearRampToValueAtTime(
+          0.3,
+          this.audioContext.currentTime + i * beepInterval + 0.02
+        );
+        gainNode.gain.setValueAtTime(
+          0.3,
+          this.audioContext.currentTime + i * beepInterval + beepDuration - 0.02
+        );
+        gainNode.gain.linearRampToValueAtTime(
+          0,
+          this.audioContext.currentTime + i * beepInterval + beepDuration
+        );
+
+        oscillator.start(this.audioContext.currentTime + i * beepInterval);
+        oscillator.stop(
+          this.audioContext.currentTime + i * beepInterval + beepDuration
+        );
       }
     } catch (error) {
-      console.error('오디오 재생 중 오류 발생:', error);
+      console.error("오디오 재생 중 오류 발생:", error);
     }
   }
 }
