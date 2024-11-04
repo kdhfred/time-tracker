@@ -958,7 +958,7 @@ body {
   transition: max-height 0.3s ease-in;
 }
 
-/* 모��일 대응 */
+/* 모일 대응 */
 @media (max-width: 768px) {
   .category-item .shortcut-badge {
     padding: 1px 6px;
@@ -1086,4 +1086,31 @@ body {
 /* 다크모드에서 버튼 그림자 효과 */
 [data-theme="dark"] .button:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 날짜 네비게이션 스타일 추가 */
+.date-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 8px;
+  background-color: var(--background-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.date-navigation button {
+  padding: 4px 8px;
+  min-width: 32px;
+}
+
+#current-date {
+  font-weight: 500;
+  min-width: 100px;
+  text-align: center;
+}
+
+[data-theme="dark"] .date-navigation {
+  background-color: var(--dark-background-secondary);
 }

@@ -60,6 +60,39 @@ class TimeTracker {
         darkModeToggle.checked = e.matches;
       }
     });
+
+    this.currentDate = new Date();
+    this.currentDate.setHours(0, 0, 0, 0);
+
+    document.getElementById("prev-date").addEventListener("click", () => {
+      this.changeDate(-1);
+    });
+
+    document.getElementById("next-date").addEventListener("click", () => {
+      this.changeDate(1);
+    });
+  }
+
+  changeDate(offset) {
+    this.currentDate.setDate(this.currentDate.getDate() + offset);
+    this.updateDateDisplay();
+    this.updateDisplay();
+  }
+
+  updateDateDisplay() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    let dateText = this.currentDate.toLocaleDateString('ko-KR', options);
+    
+    if (this.currentDate.getTime() === today.getTime()) {
+      dateText = '오늘';
+    } else if (this.currentDate.getTime() === today.getTime() - 86400000) {
+      dateText = '어제';
+    }
+    
+    document.getElementById("current-date").textContent = dateText;
   }
 
   loadShortcuts() {
@@ -378,33 +411,42 @@ class TimeTracker {
       allCategories.set(category, 0);
     });
 
+    const startOfDay = new Date(this.currentDate);
+    const endOfDay = new Date(this.currentDate);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
     sessions.forEach((session) => {
-      const current = allCategories.get(session.category) || 0;
-      allCategories.set(session.category, current + session.duration);
+      const sessionDate = new Date(session.startTime);
+      if (sessionDate >= startOfDay && sessionDate < endOfDay) {
+        const current = allCategories.get(session.category) || 0;
+        allCategories.set(session.category, current + session.duration);
+      }
     });
 
     allCategories.forEach((totalSeconds, category) => {
-      const div = document.createElement("div");
-      div.className = "session category-item";
+      if (totalSeconds > 0) {
+        const div = document.createElement("div");
+        div.className = "session category-item";
 
-      const shortcutKey = categoryShortcuts.get(category);
-      const shortcutBadge = shortcutKey
-        ? `<span class="shortcut-badge">${shortcutKey}</span>`
-        : "";
+        const shortcutKey = categoryShortcuts.get(category);
+        const shortcutBadge = shortcutKey
+          ? `<span class="shortcut-badge">${shortcutKey}</span>`
+          : "";
 
-      div.innerHTML = `
-        <h3>${category}</h3>
-        <p>${this.formatTime(totalSeconds)}</p>
-        ${shortcutBadge}
-      `;
+        div.innerHTML = `
+          <h3>${category}</h3>
+          <p>${this.formatTime(totalSeconds)}</p>
+          ${shortcutBadge}
+        `;
 
-      if (shortcutKey) {
-        div.addEventListener("click", () => {
-          this.startSession(shortcutKey);
-        });
+        if (shortcutKey) {
+          div.addEventListener("click", () => {
+            this.startSession(shortcutKey);
+          });
+        }
+
+        categoryList.appendChild(div);
       }
-
-      categoryList.appendChild(div);
     });
 
     reversedSessions.forEach((session, displayIndex) => {
