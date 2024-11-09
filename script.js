@@ -41,14 +41,19 @@ class TimeTracker {
     }
 
     // 다크모드 토글 이벤트 리스너
-    darkModeToggle.addEventListener("change", function () {
-      const theme = this.checked ? "dark" : "light";
+    darkModeToggle.addEventListener("change", () => {
+      const theme = darkModeToggle.checked ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", theme);
       localStorage.setItem("theme", theme);
 
       // 타이틀 업데이트 (타이머가 실행 중인 경우)
       if (currentTime) {
         updateTitle(formatTime(currentTime));
+      }
+
+      // 통계 차트가 열려있는 경우 업데이트
+      if (document.getElementById("stats-modal").classList.contains("show")) {
+        this.updateStatsChart();
       }
     });
 
@@ -58,6 +63,11 @@ class TimeTracker {
         const theme = e.matches ? "dark" : "light";
         document.documentElement.setAttribute("data-theme", theme);
         darkModeToggle.checked = e.matches;
+
+        // 통계 차트가 열려있는 경우 업데이트
+        if (document.getElementById("stats-modal").classList.contains("show")) {
+          this.updateStatsChart();
+        }
       }
     });
 
@@ -71,15 +81,32 @@ class TimeTracker {
     document.getElementById("next-date").addEventListener("click", () => {
       this.changeDate(1);
     });
+
+    // 통계 버튼 이벤트 리스너 추가
+    document.getElementById("stats-button").addEventListener("click", () => {
+      this.showStatsModal();
+    });
+
+    document.getElementById("stats-prev-date").addEventListener("click", () => {
+      this.changeStatsDate(-1);
+    });
+
+    document.getElementById("stats-next-date").addEventListener("click", () => {
+      this.changeStatsDate(1);
+    });
   }
 
   changeDate(offset) {
     this.currentDate.setDate(this.currentDate.getDate() + offset);
-    this.updateDateDisplay();
+    this.updateStatsDateDisplay();
     this.updateDisplay();
+    // 통계 모달이 열려있는 경우 차트 업데이트
+    if (document.getElementById("stats-modal").classList.contains("show")) {
+      this.updateStatsChart();
+    }
   }
 
-  updateDateDisplay() {
+  updateStatsDateDisplay() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -92,6 +119,7 @@ class TimeTracker {
       dateText = '어제';
     }
     
+    document.getElementById("stats-current-date").textContent = dateText;
     document.getElementById("current-date").textContent = dateText;
   }
 
@@ -752,6 +780,166 @@ class TimeTracker {
     } catch (error) {
       console.error("오디오 재생 중 오류 발생:", error);
     }
+  }
+
+  showStatsModal() {
+    const modal = document.getElementById("stats-modal");
+    modal.classList.add("show");
+    
+    this.updateStatsDateDisplay();
+    this.updateStatsChart();
+  }
+
+  updateStatsChart() {
+    const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+    
+    // 현재 날짜 기준 최근 14일의 날짜 배열 생성
+    const dates = [];
+    const categories = new Set();
+    const categoryData = new Map();
+    
+    // 최근 14일 날짜 배열 생성
+    for (let i = 13; i >= 0; i--) {
+      const date = new Date(this.currentDate);
+      date.setDate(date.getDate() - i);
+      dates.push(date);
+    }
+
+    // 모든 카테고리와 날짜별 데이터 초기화
+    sessions.forEach(session => {
+      categories.add(session.category);
+    });
+
+    categories.forEach(category => {
+      categoryData.set(category, new Array(14).fill(0));
+    });
+
+    // 세션 데이터 집계
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.startTime);
+      sessionDate.setHours(0, 0, 0, 0);
+      
+      const dateIndex = dates.findIndex(date => 
+        date.getTime() === sessionDate.getTime()
+      );
+      
+      if (dateIndex !== -1) {
+        const categoryValues = categoryData.get(session.category);
+        categoryValues[dateIndex] += session.duration / 3600; // 시간 단위로 변환
+      }
+    });
+
+    // 차트 데이터셋 생성
+    const datasets = Array.from(categories).map((category, index) => {
+      const hue = (index * 137.5) % 360; // 골든 앵글을 사용하여 색상 분배
+      return {
+        label: category,
+        data: categoryData.get(category),
+        backgroundColor: `hsla(${hue}, 70%, 60%, 0.8)`,
+        borderColor: `hsla(${hue}, 70%, 50%, 1)`,
+        borderWidth: 1
+      };
+    });
+
+    // 날짜 레이블 포맷팅
+    const labels = dates.map(date => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (date.getTime() === today.getTime()) {
+        return '오늘';
+      } else if (date.getTime() === today.getTime() - 86400000) {
+        return '어제';
+      } else {
+        return date.toLocaleDateString('ko-KR', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      }
+    });
+
+    // 기존 차트 제거
+    const chartCanvas = document.getElementById("stats-chart");
+    if (window.statsChart) {
+      window.statsChart.destroy();
+    }
+
+    // 현재 테마에 따른 텍스트 색상 설정
+    const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
+    const textColor = isDarkMode ? '#e5e7eb' : '#2c3e50';
+
+    // 새 차트 생성
+    window.statsChart = new Chart(chartCanvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: textColor
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '시간',
+              color: textColor
+            },
+            ticks: {
+              color: textColor
+            },
+            grid: {
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: '최근 14일간 카테고리별 사용 시간',
+            color: textColor,
+            font: {
+              size: 16
+            }
+          },
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              color: textColor
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const hours = Math.floor(context.raw);
+                const minutes = Math.round((context.raw - hours) * 60);
+                return `${context.dataset.label}: ${hours}시간 ${minutes}분`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  changeStatsDate(offset) {
+    this.currentDate.setDate(this.currentDate.getDate() + offset);
+    this.updateStatsDateDisplay();
+    this.updateDisplay();
+    this.updateStatsChart();
   }
 }
 

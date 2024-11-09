@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>00:00:00 - 사용 시간 측정기</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="container">
@@ -31,6 +32,7 @@
         <div id="session-log"></div>
       </div>
       <div class="main">
+        <button id="stats-button" class="button button-secondary">📊 통계</button>
         <button id="help-button" class="button button-secondary">📓 설명서</button>
         <button id="settings-toggle" class="button button-primary">⚙️ 설정</button>
         <div class="settings" id="settings-panel">
@@ -140,6 +142,20 @@
         </div>
       </div>
       <div class="modal-backdrop" id="modal-backdrop"></div>
+      <div class="stats-modal" id="stats-modal">
+        <div class="stats-content">
+          <button class="close-button" onclick="document.getElementById('stats-modal').classList.remove('show')">×</button>
+          <h2>사용 시간 통계</h2>
+          <div class="stats-date-navigation">
+            <button id="stats-prev-date" class="button button-secondary">◀</button>
+            <span id="stats-current-date">오늘</span>
+            <button id="stats-next-date" class="button button-secondary">▶</button>
+          </div>
+          <div class="chart-container">
+            <canvas id="stats-chart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="script.js"></script>
   </body>
