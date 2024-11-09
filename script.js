@@ -237,6 +237,17 @@ class TimeTracker {
         this.createBeep();
       }
     });
+
+    document.getElementById("export-csv").addEventListener("click", () => {
+      this.exportSessionsToCSV();
+    });
+
+    document.getElementById("import-csv").addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        this.importSessionsFromCSV(e.target.files[0]);
+        e.target.value = ''; // 파일 입력 초기화
+      }
+    });
   }
 
   addShortcut() {
@@ -940,6 +951,111 @@ class TimeTracker {
     this.updateStatsDateDisplay();
     this.updateDisplay();
     this.updateStatsChart();
+  }
+
+  exportSessionsToCSV() {
+    const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+    
+    if (sessions.length === 0) {
+      alert("내보낼 세션 기록이 없습니다.");
+      return;
+    }
+
+    // CSV 헤더
+    let csvContent = "시작 시간,종료 시간,카테고리,소요 시간(초)\n";
+
+    // 세션 데이터를 CSV 형식으로 변환
+    sessions.forEach(session => {
+      const startTime = new Date(session.startTime).toLocaleString();
+      const endTime = new Date(session.endTime).toLocaleString();
+      const row = [
+        `"${startTime}"`,
+        `"${endTime}"`,
+        `"${session.category}"`,
+        session.duration
+      ].join(",");
+      csvContent += row + "\n";
+    });
+
+    // CSV 파일 생성 및 다운로드
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `time-tracker-sessions-${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  importSessionsFromCSV(file) {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const rows = text.split('\n').slice(1); // 헤더 제외
+        const sessions = [];
+
+        rows.forEach(row => {
+          if (!row.trim()) return; // 빈 줄 무시
+
+          // CSV 파싱 (따옴표로 묶인 필드 처리)
+          const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+          if (!matches || matches.length !== 4) return;
+
+          const [startTimeStr, endTimeStr, category, durationStr] = matches.map(
+            str => str.replace(/^"(.*)"$/, '$1') // 따옴표 제거
+          );
+
+          const session = {
+            startTime: new Date(startTimeStr).toISOString(),
+            endTime: new Date(endTimeStr).toISOString(),
+            category: category,
+            duration: parseFloat(durationStr)
+          };
+
+          if (!isNaN(new Date(session.startTime).getTime()) && 
+              !isNaN(new Date(session.endTime).getTime()) && 
+              !isNaN(session.duration)) {
+            sessions.push(session);
+          }
+        });
+
+        if (sessions.length === 0) {
+          throw new Error("가져올 수 있는 세션 데이터가 없습니다.");
+        }
+
+        // 기존 세션과 병합 여부 확인
+        const mergeConfirmed = confirm(
+          `${sessions.length}개의 세션을 가져왔습니다.\n` +
+          "'확인'을 누르면 기존 세션 기록과 병합됩니다.\n" +
+          "'취소'를 누르면 작업이 취소됩니다."
+        );
+
+        if (!mergeConfirmed) {
+          return; // 취소를 누르면 함수 종료
+        }
+
+        // 기존 세션과 병합
+        const existingSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+        const newSessions = [...existingSessions, ...sessions];
+        localStorage.setItem("sessions", JSON.stringify(newSessions));
+        this.updateDisplay();
+        alert(`${sessions.length}개의 세션을 성공적으로 가져왔습니다.`);
+
+      } catch (error) {
+        console.error("CSV 파일 처리 중 오류 발생:", error);
+        alert("CSV 파일 처리 중 오류가 발생했습니다: " + error.message);
+      }
+    };
+
+    reader.onerror = () => {
+      alert("파일을 읽는 중 오류가 발생했습니다.");
+    };
+
+    reader.readAsText(file, 'UTF-8');
   }
 }
 

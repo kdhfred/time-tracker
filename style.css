@@ -1245,3 +1245,50 @@ body {
 [data-theme="dark"] .stats-date-navigation {
   background-color: var(--dark-background-secondary);
 }
+
+/* 파일 관리 섹션 스타일 추가 */
+.data-management-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid var(--background-secondary);
+}
+
+.data-management-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.file-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+}
+
+.file-input + label {
+  display: inline-block;
+  cursor: pointer;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: var(--transition);
+  background-color: var(--text-secondary);
+  color: white;
+}
+
+.file-input + label:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 다크모드 대응 */
+[data-theme="dark"] .file-input + label {
+  background-color: var(--dark-text-secondary);
+}
