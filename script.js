@@ -973,10 +973,10 @@ class TimeTracker {
       return;
     }
 
-    // CSV 헤더
-    let csvContent = "시작 시간,종료 시간,카테고리,소요 시간(초)\n";
+    // CSV 헤더 수정
+    let csvContent = "시작 시간,종료 시간,카테고리,소요 시간(초),일시정지 시간(초)\n";
 
-    // 세션 데이터를 CSV 형식으로 변환
+    // 세션 데이터를 CSV 형식으로 변환 (일시정지 시간 포함)
     sessions.forEach((session) => {
       const startTime = new Date(session.startTime).toLocaleString();
       const endTime = new Date(session.endTime).toLocaleString();
@@ -985,6 +985,7 @@ class TimeTracker {
         `"${endTime}"`,
         `"${session.category}"`,
         session.duration,
+        session.totalPausedTime || 0
       ].join(",");
       csvContent += row + "\n";
     });
@@ -1020,9 +1021,9 @@ class TimeTracker {
 
           // CSV 파싱 (따옴표로 묶인 필드 처리)
           const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-          if (!matches || matches.length !== 4) return;
+          if (!matches || matches.length < 4) return;
 
-          const [startTimeStr, endTimeStr, category, durationStr] = matches.map(
+          const [startTimeStr, endTimeStr, category, durationStr, pausedTimeStr] = matches.map(
             (str) => str.replace(/^"(.*)"$/, "$1") // 따옴표 제거
           );
 
@@ -1031,6 +1032,7 @@ class TimeTracker {
             endTime: new Date(endTimeStr).toISOString(),
             category: category,
             duration: parseFloat(durationStr),
+            totalPausedTime: pausedTimeStr ? parseFloat(pausedTimeStr) : 0
           };
 
           if (
@@ -1054,7 +1056,7 @@ class TimeTracker {
         );
 
         if (!mergeConfirmed) {
-          return; // 취소를 누르면 함수 종료
+          return;
         }
 
         // 기존 세션과 병합
