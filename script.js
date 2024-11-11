@@ -94,6 +94,8 @@ class TimeTracker {
     document.getElementById("stats-next-date").addEventListener("click", () => {
       this.changeStatsDate(1);
     });
+
+    this.totalPausedTime = 0;
   }
 
   changeDate(offset) {
@@ -109,16 +111,16 @@ class TimeTracker {
   updateStatsDateDisplay() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    let dateText = this.currentDate.toLocaleDateString('ko-KR', options);
-    
+
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    let dateText = this.currentDate.toLocaleDateString("ko-KR", options);
+
     if (this.currentDate.getTime() === today.getTime()) {
-      dateText = '오늘';
+      dateText = "오늘";
     } else if (this.currentDate.getTime() === today.getTime() - 86400000) {
-      dateText = '어제';
+      dateText = "어제";
     }
-    
+
     document.getElementById("stats-current-date").textContent = dateText;
     document.getElementById("current-date").textContent = dateText;
   }
@@ -245,7 +247,7 @@ class TimeTracker {
     document.getElementById("import-csv").addEventListener("change", (e) => {
       if (e.target.files.length > 0) {
         this.importSessionsFromCSV(e.target.files[0]);
-        e.target.value = ''; // 파일 입력 초기화
+        e.target.value = ""; // 파일 입력 초기화
       }
     });
   }
@@ -305,24 +307,28 @@ class TimeTracker {
     if (!this.currentSession) return;
 
     const endTime = new Date();
-    let duration;
-
-    if (this.isPaused) {
-      duration = this.pausedTime / 1000;
-    } else {
-      duration = (endTime - this.currentSession.startTime) / 1000;
+    let totalPausedSeconds = this.totalPausedTime / 1000;
+    
+    // 현재 일시정지 중이라면 마지막 일시정지 시간도 추가
+    if (this.isPaused && this.pauseStartTime) {
+      totalPausedSeconds += (endTime - this.pauseStartTime) / 1000;
     }
+
+    const totalDuration = (endTime - this.currentSession.startTime) / 1000;
+    const activeDuration = totalDuration - totalPausedSeconds;
 
     this.saveSession({
       category: this.currentSession.category,
       startTime: this.currentSession.startTime,
       endTime: endTime,
-      duration: duration,
+      duration: activeDuration,
+      totalPausedTime: totalPausedSeconds,
     });
 
     this.currentSession = null;
     this.isPaused = false;
-    this.pausedTime = 0;
+    this.totalPausedTime = 0;
+    this.pauseStartTime = null;
 
     if (this.timer) {
       clearInterval(this.timer);
@@ -505,36 +511,38 @@ class TimeTracker {
 
       const startTime = formatTimeString(startDate);
       const endTime = formatTimeString(endDate);
-
-      const totalTimeSeconds = (endDate - startDate) / 1000;
-      const activeTimeSeconds = session.duration;
-      const pausedTimeSeconds = totalTimeSeconds - activeTimeSeconds;
-
-      let pauseDetails = "";
-      if (pausedTimeSeconds > 0) {
-        const pauseMinutes = Math.floor(pausedTimeSeconds / 60);
-        const pauseSeconds = Math.floor(pausedTimeSeconds % 60);
-        pauseDetails = `<span class="paused-time">
-                    (일시정지: ${pauseMinutes}분 ${pauseSeconds}초)
-                </span>`;
-      }
+      const index = sessions.length - 1 - displayIndex;
 
       div.innerHTML = `
-                <div class="session-header">
-                    <div class="time">
-                        ${startDate.toLocaleDateString()} 
-                        <br>
-                        ${startTime} - ${endTime}
-                        ${pauseDetails}
-                    </div>
-                    <button class="button button-danger delete-session" data-index="${
-                      sessions.length - 1 - displayIndex
-                    }">삭제</button>
-                </div>
-                <div>${session.category}</div>
-                <div class="duration">${this.formatTime(session.duration)}</div>
-            `;
+        <div class="session-header">
+          <div class="time">
+            ${startDate.toLocaleDateString()} 
+            <br>
+            ${startTime} - ${endTime}
+            ${session.totalPausedTime > 0 ? 
+              `<span class="paused-time">(일시정지: ${this.formatTime(session.totalPausedTime)})</span>` 
+              : ''}
+          </div>
+          <div class="session-actions">
+            <button class="button button-secondary edit-session" data-index="${index}">수정</button>
+            <button class="button button-danger delete-session" data-index="${index}">삭제</button>
+          </div>
+        </div>
+        <div class="session-details">
+          <div class="category">${session.category}</div>
+          <div class="duration">${this.formatTime(session.duration)}</div>
+        </div>
+      `;
+
       sessionLog.appendChild(div);
+    });
+
+    // 세션 수정 이벤트 리스너 추가
+    document.querySelectorAll('.edit-session').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        this.editSession(index);
+      });
     });
   }
 
@@ -618,23 +626,24 @@ class TimeTracker {
 
     if (this.isPaused) {
       clearInterval(this.timer);
-      this.pausedTime = new Date() - this.startTime;
       this.pauseStartTime = new Date();
       pauseButton.textContent = "재개";
       pauseButton.classList.add("button-success");
       pauseButton.classList.remove("button-primary");
     } else {
       if (this.pauseStartTime) {
-        this.pauseIntervals.push({
-          start: this.pauseStartTime,
-          end: new Date(),
-        });
+        const pauseDuration = new Date() - this.pauseStartTime;
+        this.totalPausedTime += pauseDuration;
+        this.pauseStartTime = null;
       }
-      this.startTime = new Date() - this.pausedTime;
+      
+      const currentTime = new Date() - this.startTime - this.totalPausedTime;
+      this.startTime = new Date() - currentTime;
+      
       if (this.currentSession.timer > 0) {
         const remainingTime = Math.max(
           0,
-          this.currentSession.timer * 60 - this.pausedTime / 1000
+          this.currentSession.timer * 60 - currentTime / 1000
         );
         this.startTimer(remainingTime);
       } else {
@@ -796,19 +805,19 @@ class TimeTracker {
   showStatsModal() {
     const modal = document.getElementById("stats-modal");
     modal.classList.add("show");
-    
+
     this.updateStatsDateDisplay();
     this.updateStatsChart();
   }
 
   updateStatsChart() {
     const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-    
+
     // 현재 날짜 기준 최근 14일의 날짜 배열 생성
     const dates = [];
     const categories = new Set();
     const categoryData = new Map();
-    
+
     // 최근 14일 날짜 배열 생성
     for (let i = 13; i >= 0; i--) {
       const date = new Date(this.currentDate);
@@ -817,23 +826,23 @@ class TimeTracker {
     }
 
     // 모든 카테고리와 날짜별 데이터 초기화
-    sessions.forEach(session => {
+    sessions.forEach((session) => {
       categories.add(session.category);
     });
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       categoryData.set(category, new Array(14).fill(0));
     });
 
     // 세션 데이터 집계
-    sessions.forEach(session => {
+    sessions.forEach((session) => {
       const sessionDate = new Date(session.startTime);
       sessionDate.setHours(0, 0, 0, 0);
-      
-      const dateIndex = dates.findIndex(date => 
-        date.getTime() === sessionDate.getTime()
+
+      const dateIndex = dates.findIndex(
+        (date) => date.getTime() === sessionDate.getTime()
       );
-      
+
       if (dateIndex !== -1) {
         const categoryValues = categoryData.get(session.category);
         categoryValues[dateIndex] += session.duration / 3600; // 시간 단위로 변환
@@ -848,23 +857,23 @@ class TimeTracker {
         data: categoryData.get(category),
         backgroundColor: `hsla(${hue}, 70%, 60%, 0.8)`,
         borderColor: `hsla(${hue}, 70%, 50%, 1)`,
-        borderWidth: 1
+        borderWidth: 1,
       };
     });
 
     // 날짜 레이블 포맷팅
-    const labels = dates.map(date => {
+    const labels = dates.map((date) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (date.getTime() === today.getTime()) {
-        return '오늘';
+        return "오늘";
       } else if (date.getTime() === today.getTime() - 86400000) {
-        return '어제';
+        return "어제";
       } else {
-        return date.toLocaleDateString('ko-KR', { 
-          month: 'short', 
-          day: 'numeric' 
+        return date.toLocaleDateString("ko-KR", {
+          month: "short",
+          day: "numeric",
         });
       }
     });
@@ -876,15 +885,16 @@ class TimeTracker {
     }
 
     // 현재 테마에 따른 텍스트 색상 설정
-    const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
-    const textColor = isDarkMode ? '#e5e7eb' : '#2c3e50';
+    const isDarkMode =
+      document.documentElement.getAttribute("data-theme") === "dark";
+    const textColor = isDarkMode ? "#e5e7eb" : "#2c3e50";
 
     // 새 차트 생성
     window.statsChart = new Chart(chartCanvas, {
-      type: 'bar',
+      type: "bar",
       data: {
         labels: labels,
-        datasets: datasets
+        datasets: datasets,
       },
       options: {
         responsive: true,
@@ -893,56 +903,58 @@ class TimeTracker {
           x: {
             stacked: true,
             grid: {
-              display: false
+              display: false,
             },
             ticks: {
-              color: textColor
-            }
+              color: textColor,
+            },
           },
           y: {
             stacked: true,
             beginAtZero: true,
             title: {
               display: true,
-              text: '시간',
-              color: textColor
+              text: "시간",
+              color: textColor,
             },
             ticks: {
-              color: textColor
+              color: textColor,
             },
             grid: {
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-            }
-          }
+              color: isDarkMode
+                ? "rgba(255, 255, 255, 0.1)"
+                : "rgba(0, 0, 0, 0.1)",
+            },
+          },
         },
         plugins: {
           title: {
             display: true,
-            text: '최근 14일간 카테고리별 사용 시간',
+            text: "최근 14일간 카테고리별 사용 시간",
             color: textColor,
             font: {
-              size: 16
-            }
+              size: 16,
+            },
           },
           legend: {
-            position: 'bottom',
+            position: "bottom",
             labels: {
               usePointStyle: true,
               padding: 20,
-              color: textColor
-            }
+              color: textColor,
+            },
           },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const hours = Math.floor(context.raw);
                 const minutes = Math.round((context.raw - hours) * 60);
                 return `${context.dataset.label}: ${hours}시간 ${minutes}분`;
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -955,7 +967,7 @@ class TimeTracker {
 
   exportSessionsToCSV() {
     const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-    
+
     if (sessions.length === 0) {
       alert("내보낼 세션 기록이 없습니다.");
       return;
@@ -965,25 +977,30 @@ class TimeTracker {
     let csvContent = "시작 시간,종료 시간,카테고리,소요 시간(초)\n";
 
     // 세션 데이터를 CSV 형식으로 변환
-    sessions.forEach(session => {
+    sessions.forEach((session) => {
       const startTime = new Date(session.startTime).toLocaleString();
       const endTime = new Date(session.endTime).toLocaleString();
       const row = [
         `"${startTime}"`,
         `"${endTime}"`,
         `"${session.category}"`,
-        session.duration
+        session.duration,
       ].join(",");
       csvContent += row + "\n";
     });
 
     // CSV 파일 생성 및 다운로드
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute("href", url);
-    link.setAttribute("download", `time-tracker-sessions-${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute(
+      "download",
+      `time-tracker-sessions-${new Date().toISOString().slice(0, 10)}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -991,14 +1008,14 @@ class TimeTracker {
 
   importSessionsFromCSV(file) {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         const text = e.target.result;
-        const rows = text.split('\n').slice(1); // 헤더 제외
+        const rows = text.split("\n").slice(1); // 헤더 제외
         const sessions = [];
 
-        rows.forEach(row => {
+        rows.forEach((row) => {
           if (!row.trim()) return; // 빈 줄 무시
 
           // CSV 파싱 (따옴표로 묶인 필드 처리)
@@ -1006,19 +1023,21 @@ class TimeTracker {
           if (!matches || matches.length !== 4) return;
 
           const [startTimeStr, endTimeStr, category, durationStr] = matches.map(
-            str => str.replace(/^"(.*)"$/, '$1') // 따옴표 제거
+            (str) => str.replace(/^"(.*)"$/, "$1") // 따옴표 제거
           );
 
           const session = {
             startTime: new Date(startTimeStr).toISOString(),
             endTime: new Date(endTimeStr).toISOString(),
             category: category,
-            duration: parseFloat(durationStr)
+            duration: parseFloat(durationStr),
           };
 
-          if (!isNaN(new Date(session.startTime).getTime()) && 
-              !isNaN(new Date(session.endTime).getTime()) && 
-              !isNaN(session.duration)) {
+          if (
+            !isNaN(new Date(session.startTime).getTime()) &&
+            !isNaN(new Date(session.endTime).getTime()) &&
+            !isNaN(session.duration)
+          ) {
             sessions.push(session);
           }
         });
@@ -1030,8 +1049,8 @@ class TimeTracker {
         // 기존 세션과 병합 여부 확인
         const mergeConfirmed = confirm(
           `${sessions.length}개의 세션을 가져왔습니다.\n` +
-          "'확인'을 누르면 기존 세션 기록과 병합됩니다.\n" +
-          "'취소'를 누르면 작업이 취소됩니다."
+            "'확인'을 누르면 기존 세션 기록과 병합됩니다.\n" +
+            "'취소'를 누르면 작업이 취소됩니다."
         );
 
         if (!mergeConfirmed) {
@@ -1039,12 +1058,13 @@ class TimeTracker {
         }
 
         // 기존 세션과 병합
-        const existingSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+        const existingSessions = JSON.parse(
+          localStorage.getItem("sessions") || "[]"
+        );
         const newSessions = [...existingSessions, ...sessions];
         localStorage.setItem("sessions", JSON.stringify(newSessions));
         this.updateDisplay();
         alert(`${sessions.length}개의 세션을 성공적으로 가져왔습니다.`);
-
       } catch (error) {
         console.error("CSV 파일 처리 중 오류 발생:", error);
         alert("CSV 파일 처리 중 오류가 발생했습니다: " + error.message);
@@ -1055,7 +1075,79 @@ class TimeTracker {
       alert("파일을 읽는 중 오류가 발생했습니다.");
     };
 
-    reader.readAsText(file, 'UTF-8');
+    reader.readAsText(file, "UTF-8");
+  }
+
+  editSession(index) {
+    const sessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+    const session = sessions[index];
+    
+    const startTime = new Date(session.startTime);
+    const endTime = new Date(session.endTime);
+    
+    const modal = document.createElement('div');
+    modal.className = 'edit-session-modal';
+    modal.innerHTML = `
+      <div class="edit-session-content">
+        <h3>세션 수정</h3>
+        <form id="edit-session-form">
+          <div class="form-group">
+            <label>카테고리</label>
+            <input type="text" id="edit-category" value="${session.category}" required>
+          </div>
+          <div class="form-group">
+            <label>시작 시간</label>
+            <input type="datetime-local" id="edit-start-time" 
+              value="${startTime.toISOString().slice(0, 16)}" required>
+          </div>
+          <div class="form-group">
+            <label>종료 시간</label>
+            <input type="datetime-local" id="edit-end-time" 
+              value="${endTime.toISOString().slice(0, 16)}" required>
+          </div>
+          <div class="form-group">
+            <label>일시정지 시간 (초)</label>
+            <input type="number" id="edit-paused-time" 
+              value="${session.totalPausedTime || 0}" min="0" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">저장</button>
+            <button type="button" class="button button-secondary" id="cancel-edit">취소</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const form = modal.querySelector('#edit-session-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const newStartTime = new Date(form.querySelector('#edit-start-time').value);
+      const newEndTime = new Date(form.querySelector('#edit-end-time').value);
+      const newPausedTime = parseFloat(form.querySelector('#edit-paused-time').value);
+      const newCategory = form.querySelector('#edit-category').value;
+
+      const totalDuration = (newEndTime - newStartTime) / 1000;
+      const activeDuration = totalDuration - newPausedTime;
+
+      sessions[index] = {
+        category: newCategory,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        duration: activeDuration,
+        totalPausedTime: newPausedTime
+      };
+
+      localStorage.setItem("sessions", JSON.stringify(sessions));
+      this.updateDisplay();
+      modal.remove();
+    });
+
+    modal.querySelector('#cancel-edit').addEventListener('click', () => {
+      modal.remove();
+    });
   }
 }
 
